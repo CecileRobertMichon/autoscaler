@@ -33,6 +33,7 @@ const (
 	deprecatedMachineAnnotationKey = "cluster.k8s.io/machine"
 	machineDeleteAnnotationKey     = "cluster.x-k8s.io/delete-machine"
 	machineAnnotationKey           = "cluster.x-k8s.io/machine"
+	machinePoolAnnotationKey       = "cluster.x-k8s.io/machinepool"
 	debugFormat                    = "%s (min: %d, max: %d, replicas: %d)"
 )
 
@@ -91,7 +92,7 @@ func (ng *nodegroup) DeleteNodes(nodes []*corev1.Node) error {
 	}
 
 	// if we are at minSize already we wail early.
-	if int(replicas) <= ng.MinSize() {
+	if replicas <= ng.MinSize() {
 		return fmt.Errorf("min size reached, nodes will not be deleted")
 	}
 
@@ -121,6 +122,7 @@ func (ng *nodegroup) DeleteNodes(nodes []*corev1.Node) error {
 	// Step 3: annotate the corresponding machine that it is a
 	// suitable candidate for deletion and drop the replica count
 	// by 1. Fail fast on any error.
+	// TODO: make this work for MachinePools
 	for _, node := range nodes {
 		machine, err := ng.machineController.findMachineByProviderID(normalizedProviderString(node.Spec.ProviderID))
 		if err != nil {
